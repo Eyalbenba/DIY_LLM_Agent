@@ -7,7 +7,7 @@ from typing import Annotated, Any, Literal, Optional, Type, TypeVar
 
 from langchain_core.runnables import RunnableConfig, ensure_config
 
-from retrieval_graph import prompts
+from src.retrieval_graph import prompts
 
 
 @dataclass(kw_only=True)
@@ -35,7 +35,7 @@ class IndexConfiguration:
         Literal["elastic", "elastic-local", "pinecone", "mongodb"],
         {"__template_metadata__": {"kind": "retriever"}},
     ] = field(
-        default="elastic",
+        default="mongodb",
         metadata={
             "description": "The vector store provider to use for retrieval. Options are 'elastic', 'pinecone', or 'mongodb'."
         },
@@ -80,7 +80,7 @@ class Configuration(IndexConfiguration):
     )
 
     response_model: Annotated[str, {"__template_metadata__": {"kind": "llm"}}] = field(
-        default="anthropic/claude-3-5-sonnet-20240620",
+        default="openai/gpt-3.5-turbo-0125",
         metadata={
             "description": "The language model used for generating responses. Should be in the form: provider/model-name."
         },
@@ -94,7 +94,7 @@ class Configuration(IndexConfiguration):
     )
 
     query_model: Annotated[str, {"__template_metadata__": {"kind": "llm"}}] = field(
-        default="anthropic/claude-3-haiku-20240307",
+        default="openai/gpt-3.5-turbo-0125",
         metadata={
             "description": "The language model used for processing and refining queries. Should be in the form: provider/model-name."
         },

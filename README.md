@@ -35,7 +35,7 @@ Assuming you have already [installed LangGraph Studio](https://github.com/langch
 1. Create a `.env` file.
 
 ```bash
-cp .env.example .env
+cp .env .env
 ```
 
 2. Select your retriever & index, and save the access instructions to your `.env` file.

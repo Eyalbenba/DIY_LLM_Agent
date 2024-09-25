@@ -16,10 +16,10 @@ from langchain_core.pydantic_v1 import BaseModel
 from langchain_core.runnables import RunnableConfig
 from langgraph.graph import StateGraph
 
-from retrieval_graph import retrieval
-from retrieval_graph.configuration import Configuration
-from retrieval_graph.state import InputState, State
-from retrieval_graph.utils import format_docs, get_message_text, load_chat_model
+from src.retrieval_graph import retrieval
+from src.retrieval_graph.configuration import Configuration
+from src.retrieval_graph.state import InputState, State
+from src.retrieval_graph.utils import format_docs, get_message_text, load_chat_model
 
 # Define the function that calls the model
 

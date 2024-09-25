@@ -6,9 +6,9 @@ from langchain_core.documents import Document
 from langchain_core.runnables import RunnableConfig
 from langgraph.graph import StateGraph
 
-from retrieval_graph import retrieval
-from retrieval_graph.configuration import IndexConfiguration
-from retrieval_graph.state import IndexState
+from src.retrieval_graph import retrieval
+from src.retrieval_graph.configuration import IndexConfiguration
+from src.retrieval_graph.state import IndexState
 
 
 def ensure_docs_have_user_id(

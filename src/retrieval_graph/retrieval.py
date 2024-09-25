@@ -14,7 +14,7 @@ from langchain_core.embeddings import Embeddings
 from langchain_core.runnables import RunnableConfig
 from langchain_core.vectorstores import VectorStoreRetriever
 
-from retrieval_graph.configuration import Configuration, IndexConfiguration
+from src.retrieval_graph.configuration import Configuration, IndexConfiguration
 
 ## Encoder constructors
 
@@ -39,51 +39,6 @@ def make_text_encoder(model: str) -> Embeddings:
 
 
 @contextmanager
-def make_elastic_retriever(
-    configuration: IndexConfiguration, embedding_model: Embeddings
-) -> Generator[VectorStoreRetriever, None, None]:
-    """Configure this agent to connect to a specific elastic index."""
-    from langchain_elasticsearch import ElasticsearchStore
-
-    connection_options = {}
-    if configuration.retriever_provider == "elastic-local":
-        connection_options = {
-            "es_user": os.environ["ELASTICSEARCH_USER"],
-            "es_password": os.environ["ELASTICSEARCH_PASSWORD"],
-        }
-
-    else:
-        connection_options = {"es_api_key": os.environ["ELASTICSEARCH_API_KEY"]}
-
-    vstore = ElasticsearchStore(
-        **connection_options,  # type: ignore
-        es_url=os.environ["ELASTICSEARCH_URL"],
-        index_name="langchain_index",
-        embedding=embedding_model,
-    )
-
-    search_kwargs = configuration.search_kwargs
-
-    search_filter = search_kwargs.setdefault("filter", [])
-    search_filter.append({"term": {"metadata.user_id": configuration.user_id}})
-    yield vstore.as_retriever(search_kwargs=search_kwargs)
-
-
-@contextmanager
-def make_pinecone_retriever(
-    configuration: IndexConfiguration, embedding_model: Embeddings
-) -> Generator[VectorStoreRetriever, None, None]:
-    """Configure this agent to connect to a specific pinecone index."""
-    from langchain_pinecone import PineconeVectorStore
-
-    search_kwargs = configuration.search_kwargs
-
-    search_filter = search_kwargs.setdefault("filter", {})
-    search_filter.update({"user_id": configuration.user_id})
-    vstore = PineconeVectorStore.from_existing_index(
-        os.environ["PINECONE_INDEX_NAME"], embedding=embedding_model
-    )
-    yield vstore.as_retriever(search_kwargs=search_kwargs)
 
 
 @contextmanager
