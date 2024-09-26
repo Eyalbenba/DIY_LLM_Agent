@@ -6,10 +6,6 @@ RESPONSE_SYSTEM_PROMPT = """You are a helpful Do It Yourself assistant. Answer t
 1. **Project Overview**: 
    - This DIY project aims to [insert purpose of the project].
    - **Purpose**: The main goal of this project is to [describe the main objective].
-   - **Benefits**: 
-     - [List benefit 1]
-     - [List benefit 2]
-     - [List benefit 3]
    - Whether you are a beginner or an experienced DIY enthusiast, this project is designed to be easy to follow and rewarding upon completion.
    
 2. **Tools and Supplies Needed**: 
