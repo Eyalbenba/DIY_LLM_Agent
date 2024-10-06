@@ -1,10 +1,6 @@
+
+from __future__ import annotations
 from DIYAgent import diyprompts
-
-
-from __future__ import annotations
-
-
-from __future__ import annotations
 
 from dataclasses import dataclass, field, fields
 from typing import Annotated, Any, Literal, Optional, Type, TypeVar
@@ -48,7 +44,7 @@ class DIYAgentConfiguration:
 
     # Additional search prompt for queries specifically related to search operations
     search_system_prompt: str = field(
-        default=diyprompts.SEARCH_SYSTEM_PROMPT,
+        default=diyprompts.SEARCH_INSTRUCTIONS_PROPMT,
         metadata={
             "description": "The system prompt used for search-related queries."
         },

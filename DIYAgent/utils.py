@@ -13,7 +13,7 @@ from typing import Optional
 from langchain.chat_models import init_chat_model
 from langchain_core.documents import Document
 from langchain_core.language_models import BaseChatModel
-from langchain_core.messages import AnyMessage
+from langchain_core.messages import AnyMessage,HumanMessage
 
 
 def get_message_text(msg: AnyMessage) -> str:
@@ -109,3 +109,7 @@ def load_chat_model(fully_specified_name: str) -> BaseChatModel:
         provider = ""
         model = fully_specified_name
     return init_chat_model(model, model_provider=provider)
+
+def get_initial_user_query():
+    user_query =HumanMessage(content=input("What is your DIY Plan"))
+    return get_message_text(user_query)

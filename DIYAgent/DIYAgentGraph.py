@@ -13,7 +13,7 @@ from DIYAgent.config import *
 from langchain_core.documents import Document
 from langchain_core.messages import BaseMessage
 from langchain_core.prompts import ChatPromptTemplate
-
+from langchain_community.tools.tavily_search import TavilySearchResults
 
 
 class GenerateAgentState(TypedDict):
@@ -21,25 +21,24 @@ class GenerateAgentState(TypedDict):
     plan: str
     human_feedback:str
 
-def human_feedback(state:GenerateAgentState):
+async def human_feedback(state:GenerateAgentState):
     pass
-def should_continue(state: GenerateAgentState):
-    human_feedback = state.get('human_feedback',None)
+async def should_continue(state: GenerateAgentState):
+    human_feedback = state.get('human_feedback_string',None)
     if human_feedback:
-        return "implement_plan"
+        return "get_user_query"
+    return "generate_search_query"
 
-    return END
 
-
-def search_web(state: DIYAgentState):
+async def search_web(state: DIYAgentState):
     """ Retrieve docs from web search """
 
     # Search query
-    structured_llm = llm.with_structured_output(SearchQuery)
-    search_query = structured_llm.invoke([search_instructions] + state['messages'])
+    search_query = state.search_query
 
     # Search
-    search_docs = tavily_search.invoke(search_query.search_query)
+    tavily_search = TavilySearchResults(max_results=3)
+    search_docs = tavily_search.invoke(search_query)
 
     # Format
     formatted_search_docs = "\n\n---\n\n".join(
@@ -52,7 +51,7 @@ def search_web(state: DIYAgentState):
     return {"retrieved_docs": [formatted_search_docs]}
 
 
-def get_user_query(state: DIYAgentState):
+async def get_user_query(state: DIYAgentState):
     # Capture user input as a query
     user_input = input("Tell me about your DIY project: ")
 
@@ -95,7 +94,7 @@ async def refine_user_query(
     prompt = ChatPromptTemplate.from_messages(
         [
             ("system", configuration.query_system_prompt),  # System prompt for query refinement
-            ("placeholder", "{queries}"),
+            ("placeholder", "{user_query}"),
         ]
     )
 
@@ -106,7 +105,7 @@ async def refine_user_query(
     message_value = await prompt.ainvoke(
         {
             "messages": state.messages,  # Pass all messages for context, even if it's just one
-            "queries": "\n- ".join(state.queries) if state.queries else "",  # Combine existing queries if available
+            "user_query": state.user_query,  # Combine existing queries if available
             "system_time": datetime.now(tz=timezone.utc).isoformat(),  # Current time in UTC
         },
         config,
@@ -117,7 +116,7 @@ async def refine_user_query(
 
     # Return the generated query in the expected format
     return {
-        "queries": [generated.query],
+        "queries": [generated.search_query],
     }
 
 async def generate_search_query(state: DIYAgentState,*, config: RunnableConfig) -> dict[str, list[str]]:
@@ -153,7 +152,7 @@ async def generate_search_query(state: DIYAgentState,*, config: RunnableConfig) 
         "DIY_Final_Plan": [generated.plan],
     }
 
-async def generate_diy_plan(state: DIYAgentState ,*, config: RunnableConfig) -> dict[str, list[str]]:
+async def generate_diy_plan(state: DIYAgentState ,*, config: RunnableConfig) -> OutputState:
     # Load the configuration specific to the DIYAgent
     configuration = DIYAgentConfiguration.from_runnable_config(config)
 
@@ -178,21 +177,48 @@ async def generate_diy_plan(state: DIYAgentState ,*, config: RunnableConfig) -> 
     )
 
     # Use the model to generate a refined query
-    generated = cast(SearchQuery, await model.ainvoke(message_value, config))
+    generated = cast(DIYPlan, await model.ainvoke(message_value, config))
 
     # Return the generated query in the expected format
     return {
-        "websearch_query": [generated.query],
+        "diy_final_plan": [generated.plan],
     }
 
 
-builder = StateGraph(DIYAgentState)
-builder.add_node("get_user_query",get_user_query)
-builder.add_node("refine_user_query",refine_user_query)
-builder.add_node("human_feedback", human_feedback)
-builder.add_node("generate_search_query",generate_search_query)
-builder.add_node("RAG_docs", search_web)
-builder.add_node("generate_diy_plan",generate_diy_plan)
+def build_diy_graph():
+    # Initialize the StateGraph builder with DIYAgentState as the context
+    builder = StateGraph(DIYAgentState)
+
+    # Add nodes (representing states in the agent's workflow)
+    builder.add_node("get_user_query", get_user_query)
+    builder.add_node("refine_user_query", refine_user_query)
+    builder.add_node("human_feedback", human_feedback)
+    builder.add_node("generate_search_query", generate_search_query)
+    builder.add_node("RAG_docs", search_web)
+    builder.add_node("generate_diy_plan", generate_diy_plan)
+
+    # Define transitions (edges between states)
+    builder.add_edge(START, "get_user_query")  # Start -> Get user's query
+    builder.add_edge("get_user_query", "refine_user_query")  # Get user's query -> Refine query
+    builder.add_edge("refine_user_query", "human_feedback")  # Refine query -> Human feedback
+
+    # Add conditional transitions based on human feedback
+    builder.add_conditional_edges("human_feedback", should_continue, ['generate_search_query', 'get_user_query'])
+
+    # Continue transitions after conditional step
+    builder.add_edge("generate_search_query", "RAG_docs")  # Generate search query -> Retrieve docs
+    builder.add_edge("RAG_docs", "generate_diy_plan")  # Retrieve docs -> Generate DIY plan
+
+    # Set up memory saving for checkpointing the state graph
+    memory = MemorySaver()
+
+    # Compile the state graph with interrupt handling at the 'human_feedback' step
+    graph = builder.compile(interrupt_before=['human_feedback'], checkpointer=memory)
+
+    # Return the compiled graph object
+    return graph
+
+
 
 # Add nodes and edges
 # builder = StateGraph(GenerateAnalystsState)

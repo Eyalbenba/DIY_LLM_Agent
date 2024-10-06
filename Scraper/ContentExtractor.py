@@ -1,10 +1,11 @@
+import requests
 from bs4 import BeautifulSoup
 import os
 import json
 import hashlib
 import trafilatura
 from langchain_community.embeddings import HuggingFaceBgeEmbeddings
-
+import time
 
 
 class ContentExtractor:
@@ -108,7 +109,10 @@ class ContentExtractor:
         :param html_content: The fetched HTML content of the webpage.
         """
         try:
+            start_extraction = time.time()
             content = trafilatura.extract(html_content)
+            end_extraction = time.time()
+            print(f'Extracted time for {url}: {end_extraction - start_extraction}')
 
             # Conditionally generate the embedding if enabled
             embedding = self.generate_embedding(content) if self.use_embeddings else None
@@ -144,3 +148,18 @@ class ContentExtractor:
 
         except Exception as e:
             self.logger.error(f"Error extracting html for {url}: {e}")
+
+if __name__ == '__main__':
+    extractor = ContentExtractor(use_embeddings=False, main_save_path=None,save_content=False)
+    start = time.time()
+    url = "https://www.instructables.com/Tims-Mini-Plotter-2-With-Single-PCB/"
+    try:
+        response = requests.get(url)
+        response.raise_for_status()
+        html_content = response.text
+    except Exception as e:
+        print(f"Error extracting html for {url}: {e}")
+
+    extractor.extract_content_from_html(url, html_content)
+    end = time.time()
+    print(f"Total Time taken to extract content from {url}: {end - start}")

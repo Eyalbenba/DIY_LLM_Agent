@@ -1,7 +1,7 @@
 
 from dataclasses import dataclass, field
 from typing import Annotated, Any, Literal, Optional, Sequence, Union
-from langchain_core.pydantic_v1 import BaseModel,Field
+from pydantic import BaseModel,Field
 from langchain_core.documents import Document
 from langchain_core.messages import AnyMessage
 from langgraph.graph import add_messages
@@ -18,9 +18,19 @@ class InputState:
 
     messages: Annotated[Sequence[AnyMessage], add_messages]
 
-
 # This is the primary state of your agent, where you can store any information
 
+@dataclass(kw_only=True)
+class OutputState:
+    """Represents the input state for the agent.
+
+    This class defines the structure of the input state, which includes
+    the messages exchanged between the user and the agent. It serves as
+    a restricted version of the full State, providing a narrower interface
+    to the outside world compared to what is maintained internally.
+    """
+
+    answer:str
 
 def add_queries(existing: Sequence[str], new: Sequence[str]) -> Sequence[str]:
     """Combine existing queries with new queries.
@@ -38,7 +48,9 @@ def add_queries(existing: Sequence[str], new: Sequence[str]) -> Sequence[str]:
 @dataclass(kw_only=True)
 class DIYAgentState(InputState):
     """The state of your graph / agent."""
-    user_query :str
+    human_feedback_string:str = field(default_factory=str)
+    user_query :str = field(default_factory=str)
+    search_query:str = field(default_factory=str)
 
     queries: Annotated[list[str], add_queries] = field(default_factory=list)
     """A list of search queries that the agent has generated."""
