@@ -51,6 +51,8 @@ class DIYAgentState(InputState):
     human_feedback_string:str = field(default_factory=str)
     user_query :str = field(default_factory=str)
     search_query:str = field(default_factory=str)
+    DIY_Final_Plan:str = field(default_factory=str)
+
 
     queries: Annotated[list[str], add_queries] = field(default_factory=list)
     """A list of search queries that the agent has generated."""

@@ -2,10 +2,10 @@
 from __future__ import annotations
 from DIYAgent import diyprompts
 
-from dataclasses import dataclass, field, fields
+from dataclasses import dataclass, field, fields,asdict
 from typing import Annotated, Any, Literal, Optional, Type, TypeVar
 from langchain_core.runnables import RunnableConfig, ensure_config
-
+import uuid
 
 
 @dataclass(kw_only=True)
@@ -58,6 +58,14 @@ class DIYAgentConfiguration:
         },
     )
 
+    # New thread_id field for memory checkpointing
+    thread_id: str = field(
+        default_factory=lambda: str(uuid.uuid4()),  # Auto-generate a unique thread ID if not provided
+        metadata={
+            "description": "Unique identifier for the current thread to be used with memory checkpointing."
+        },
+    )
+
     @classmethod
     def from_runnable_config(
             cls: Type[T], config: Optional[RunnableConfig] = None
@@ -69,11 +77,15 @@ class DIYAgentConfiguration:
             config (Optional[RunnableConfig]): The configuration object to use.
 
         Returns:
-            T: An instance of IndexConfiguration with the specified configuration.
+            T: An instance of DIYAgentConfiguration with the specified configuration.
         """
         config = ensure_config(config)
         configurable = config.get("configurable") or {}
         _fields = {f.name for f in fields(cls) if f.init}
         return cls(**{k: v for k, v in configurable.items() if k in _fields})
+
+    def to_dict(self) -> dict:
+        """Convert the configuration instance to a dictionary."""
+        return asdict(self)
 
 T = TypeVar("T", bound=DIYAgentConfiguration)

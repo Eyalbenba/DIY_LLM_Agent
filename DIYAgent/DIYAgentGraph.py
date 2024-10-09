@@ -23,11 +23,11 @@ class GenerateAgentState(TypedDict):
 
 async def human_feedback(state:GenerateAgentState):
     pass
-async def should_continue(state: GenerateAgentState):
+async def should_continue(state: DIYAgentState):
     human_feedback = state.get('human_feedback_string',None)
     if human_feedback:
-        return "get_user_query"
-    return "generate_search_query"
+        return
+    return
 
 
 async def search_web(state: DIYAgentState):
@@ -52,18 +52,18 @@ async def search_web(state: DIYAgentState):
 
 
 async def get_user_query(state: DIYAgentState):
+    print("Waiting for user input...")
     # Capture user input as a query
     user_input = input("Tell me about your DIY project: ")
+    print("User input received:", user_input)
 
     # Add the user's query as a new HumanMessage to the sequence of messages
     new_message = HumanMessage(content=user_input)
-
-    # Create a new sequence with the added message (since sequences are immutable)
     state.messages = state.messages + [new_message]
 
-    # Optionally, if you're storing user_query separately
     state.user_query = user_input
-
+    print("Updated state with user query:", state)
+    return {'user_query': user_input}
 
 
 
@@ -145,11 +145,11 @@ async def generate_search_query(state: DIYAgentState,*, config: RunnableConfig) 
     )
 
     # Use the model to generate a refined query
-    generated = cast(DIYPlan, await model.ainvoke(message_value, config))
+    generated = cast(SearchQuery, await model.ainvoke(message_value, config))
 
     # Return the generated query in the expected format
     return {
-        "DIY_Final_Plan": [generated.plan],
+        "search_query": [generated.search_query],
     }
 
 async def generate_diy_plan(state: DIYAgentState ,*, config: RunnableConfig) -> OutputState:
@@ -181,7 +181,7 @@ async def generate_diy_plan(state: DIYAgentState ,*, config: RunnableConfig) -> 
 
     # Return the generated query in the expected format
     return {
-        "diy_final_plan": [generated.plan],
+        "DIY_Final_Plan": [generated.plan],
     }
 
 
@@ -220,17 +220,3 @@ def build_diy_graph():
 
 
 
-# Add nodes and edges
-# builder = StateGraph(GenerateAnalystsState)
-# builder.add_node("create_analysts", create_analysts)
-# builder.add_node("human_feedback", human_feedback)
-# builder.add_edge(START, "create_analysts")
-# builder.add_edge("create_analysts", "human_feedback")
-# builder.add_conditional_edges("human_feedback", should_continue, ["create_analysts", END])
-#
-# # Compile
-# memory = MemorySaver()
-# graph = builder.compile(interrupt_before=['human_feedback'], checkpointer=memory)
-#
-# # View
-# display(Image(graph.get_graph(xray=1).draw_mermaid_png()))

@@ -2,6 +2,7 @@
 
 DIYPLAN_SYSTEM_PROMPT = """You are a helpful Do It Yourself assistant. Answer the user's questions based on the retrieved documents.
 
+Create a DIY Plan containing the following components:
 
 1. **Project Overview**: 
    - This DIY project aims to [insert purpose of the project].
@@ -14,27 +15,27 @@ DIYPLAN_SYSTEM_PROMPT = """You are a helpful Do It Yourself assistant. Answer th
 3. **Steps for the Project**:
    - Clearly outline the steps needed to complete the project. Number the steps for easy reference.
 
+The User Query is {diy_query}
+
+The retreived documents are:
+
 {retrieved_docs}
 
 System time: {system_time}"""
 
-QUERY_SYSTEM_PROMPT = """Refine and enhance the following user's query to provide detailed, actionable information that will help an LLM lay out a comprehensive plan for the DIY project:
+QUERY_SYSTEM_PROMPT = """Refine the user's query to make it clear and actionable, similar to these examples: 'How to unblock a toilet,' 'How to fix a dripping tap.' The refined query should:
 
-User's Query: {user_query}
+Clearly specify the task
+Be short and focused
+Provide enough context for the LLM to generate a comprehensive step-by-step plan.
 
-Focus on:
-
-Clarifying specific DIY techniques required for the project
-Identifying the tools and supplies needed for each step
-Structuring the project into logical, step-by-step instructions
-Offering creative ideas or modifications to enhance the project
-Ensure that the refined query contains enough detail for the LLM to generate a clear and organized response that outlines a full DIY process.
+User Query: {user_query}
 
 System time: {system_time}"""
 
 SEARCH_INSTRUCTIONS_PROPMT = """You will be provided with queries generated for a DIY project:
 
-Generated Queries: {querys}
+Generated Queries: {queries}
 
 Your task is to analyze these queries and convert them into a single, well-structured query suitable for use in retrieval and web search.
 
