@@ -20,7 +20,7 @@ def main():
     # Build the graph
     builder = build_graph()
     memory = MemorySaver()
-    graph = builder.compile(checkpointer=memory)
+    graph = builder.compile(interrupt_before=["human_feedback_on_diyplan"],checkpointer=memory)
 
     # Get user query input
     user_query = input("What do you want to build? \n")
@@ -32,22 +32,33 @@ def main():
         human_feedback_string='',
         diy_query='',
         DIY_Final_Plan='',
-        retrieved_docs=[]
+        retrieved_docs=[],
+        num_plans=0,
+        summary=''
     )
 
     thread = {"configurable": {"thread_id": "13"}}
 
     # Run the graph to generate the DIY plan
-    for chunk in graph.stream(diystate,config=thread,stream_mode="updates"):
-        print(chunk)
-    # graph_run = graph.invoke(diystate, thread)
+    for event in graph.stream(diystate,config=thread,stream_mode="values"):
+        print(event)
 
+    # graph_run = graph.invoke(diystate, thread)
+    current_state = graph.get_state(thread)
+    diy_plan = current_state.values['DIY_Final_Plan']
     # Output the initial DIY plan
-    # print("DIY Final Plan:")
-    # print(graph_run['DIY_Final_Plan'])
+    print("DIY Final Plan:")
+    print(diy_plan)
 
     # # Ask if the plan is to the user's liking
-    # feedback = input("Is this plan to your liking? (yes/no): ").strip().lower()
+    feedback = input("Is this plan to your liking? (yes/no): ").strip().lower()
+    if feedback == 'no':
+        refine_feedback = input("Please Add Refinements").strip().lower()
+        graph.update_state(thread,{"human_refine_plan_string":refine_feedback})
+        new_state = graph.get_state(thread).values
+        for event in graph.stream(None,thread,stream_mode="values"):
+            print(event)
+
     #
     # # If the user doesn't like the plan, refine it
     # while feedback != 'yes':

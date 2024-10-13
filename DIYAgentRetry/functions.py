@@ -3,7 +3,7 @@
 from datetime import datetime, timezone
 from typing import Dict
 from langchain.schema import SystemMessage
-from langchain_core.language_models import BaseLLM
+from langgraph.graph import END
 from DIYAgentRetry.state import DIYAgentState, RefinedQuery, DIYPlan
 from DIYAgentRetry.prompts import QUERY_SYSTEM_PROMPT, DIYPLAN_SYSTEM_PROMPT
 from langchain_community.tools.tavily_search import TavilySearchResults
@@ -41,16 +41,22 @@ def generate_diy_plan(state: DIYAgentState) -> Dict[str, str]:
     llm = load_chat_model('gpt-3.5-turbo-0125')
     structured_llm = llm.with_structured_output(DIYPlan)
 
-    diy_system_message = DIYPLAN_SYSTEM_PROMPT.format(
-        diy_query=diy_query,
-        retrieved_docs="\n\n---\n\n".join(retrieved_docs),
-        system_time=datetime.now(tz=timezone.utc).isoformat()
-    )
+    summary = state.get("summary",'')
+    if summary:
+        pass
+    else:
+        diy_system_message = DIYPLAN_SYSTEM_PROMPT.format(
+            diy_query=diy_query,
+            retrieved_docs="\n\n---\n\n".join(retrieved_docs),
+            system_time=datetime.now(tz=timezone.utc).isoformat()
+        )
 
     generated = structured_llm.invoke([SystemMessage(content=diy_system_message)])
     state['messages'].append(AIMessage(f"DIY Plan from the user query : {generated.plan}", name="Bot"))
+    state['num_plans'] += 1
     # Update the state with the final plan
     return {"DIY_Final_Plan": generated.plan,"messages":state['messages']}
+
 
 def search_web(state: DIYAgentState) -> Dict[str, list]:
     """Retrieve documents from a web search based on the refined query."""
@@ -69,6 +75,20 @@ def search_web(state: DIYAgentState) -> Dict[str, list]:
 
     # Update the state with the retrieved documents
     return {"retrieved_docs": formatted_search_docs}
+
+def max_plans_reached(state: DIYAgentState):
+    num_plans = state['num_plans']
+    if num_plans >= 2:
+        return END
+    return "human_feedback_on_diyplan"
+def human_feedback_on_diyplan(state: DIYAgentState):
+    """ Getting Feedback from user on DIY Plan """
+    pass
+def should_make_new_diy_plan(state: DIYAgentState):
+    human_feedback_on_diy = state['human_refine_plan_string']
+    if human_feedback_on_diy:
+        return "summarize_conversation"
+    return END
 def summarize_conversation(state: DIYAgentState) -> Dict[str, list]:
     summary = state.get("summary","")
     if summary:
@@ -76,7 +96,7 @@ def summarize_conversation(state: DIYAgentState) -> Dict[str, list]:
                           "Extend the summary taking into account the new messages above:"
         )
     else:
-        summary_message = "Create a summart of the conversation above:"
+        summary_message = "Create a summary of the conversation above:"
     messages = state.get("messages",[]) + [HumanMessage(summary_message,name="User")]
     model = load_chat_model('gpt-3.5-turbo-0125')
     response = model.invoke(messages)

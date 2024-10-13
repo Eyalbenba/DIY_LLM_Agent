@@ -9,12 +9,14 @@ from langgraph.graph import add_messages
 class DIYAgentState(TypedDict):
     """The state of the DIY Agent."""
     messages: Annotated[list[AnyMessage], add_messages]
-    human_feedback_string: str
+    human_feedback_refine_or_not: str
     user_query: str
     diy_query: str
     DIY_Final_Plan: str
     retrieved_docs: List[str]
     summary:str
+    num_plans:int
+    human_refine_plan_string:str
 
 class SearchQuery(BaseModel):
     search_query: str = Field(None, description="Search query for retrieval.")

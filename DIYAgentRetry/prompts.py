@@ -13,11 +13,11 @@ Create a DIY Plan containing the following components:
    - Whether you are a beginner or an experienced DIY enthusiast, this project is designed to be easy to follow and rewarding upon completion.
 
 2. **Tools and Supplies Needed**: 
-   - List all the necessary tools and supplies required for the project.
-
+   - Provide a detailed list of all essential tools and supplies required for the project, covering not only the basic and obvious items but also more specialized tools that could make the process easier and more efficient.
+   - Include a range of tools, from common construction tools to advanced or less trivial ones that may help streamline tasks or improve precision. This should encompass measuring, cutting, fastening, sanding, safety gear, and any other equipment or supplies that might be encountered or prove helpful during the project.
 3. **Steps for the Project**:
 
-Break down the project into clear, actionable steps, ensuring that each step is easy to follow, even for someone with little experience, including:
+Break down the project into clear, actionable steps, ensuring that each step is easy to follow BUT WELL DETAILED, even for someone with little experience, including:
   Planning and Preparation:
     - Measure the space or area involved, estimate materials needed, and prepare tools.
     - Highlight any safety precautions.
@@ -28,15 +28,15 @@ Break down the project into clear, actionable steps, ensuring that each step is 
   Final Touches:
     - Include steps on how to finish or refine the project, ensuring it looks professional and functions optimally.
 
-4. **Extra Creative Suggestions**:
-
-    - Suggest innovative or unique ideas that can enhance the project’s appearance, functionality, or durability.
-    - Offer eco-friendly alternatives or budget-friendly substitutions for materials.
-    - Propose modifications to make the project more versatile or adaptable for future use (e.g., adding adjustable parts, integrating storage, or using recyclable materials).
-
+4. **Encourage Creative Enhancements**:
+    
+    - Invite fresh and inventive ideas that could take the project in new directions, enhancing its design, functionality, or durability.
+    - Explore alternative materials or approaches that could bring unique value to the project.
+    - Suggest modifications that could make the project more adaptable, versatile, or open to future possibilities.
 5. **Possible Videos**
-   - If one of the retrieved docs has a URL from YouTube or any video platform, append it to the bottom to show the user.
-
+   - If one of the retrieved docs has a URL from YouTube or any video platform, append it to the bottom to show the user
+   - IF NO YOUTUBE LINKS ARE PRESENT DONT ADD THIS SECTION!!!!
+   
 The User Query is {diy_query}
 
 The retrieved documents are:
