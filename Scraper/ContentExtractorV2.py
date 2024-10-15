@@ -9,17 +9,19 @@ import time
 import cohere
 from dotenv import load_dotenv
 import asyncio
-# Load environment variables from .env file
+from sumy.parsers.plaintext import PlaintextParser
+from sumy.nlp.tokenizers import Tokenizer
+from sumy.summarizers.lex_rank import LexRankSummarizer
+import nltk
+nltk.download('punkt')
+
 load_dotenv()
 
 # Initialize the Cohere client
 co = cohere.ClientV2(os.getenv('CO_API_KEY'))
 
-
-
-
 class ContentExtractor:
-    def __init__(self, save_content=True, main_save_path=None, logger=None, use_embeddings=False):
+    def __init__(self, save_content=True, main_save_path=None, logger=None, use_embeddings=True):
         """
         Initialize the content extractor system.
 
@@ -44,6 +46,36 @@ class ContentExtractor:
             # )
             self.cohere_api_embed = co
 
+    def generate_summary_text_lexrank(self, text, url, sentence_count=5):
+        """
+        Summarizes the provided text using LexRank algorithm and logs any errors with the associated URL.
+
+        Args:
+        - text (str): The text to be summarized.
+        - url (str): The URL from which the text was extracted.
+        - sentence_count (int): Number of sentences for the summary.
+
+        Returns:
+        - str: The summarized text.
+        """
+        try:
+            # Parse the text using PlaintextParser and Tokenizer
+            parser = PlaintextParser.from_string(text, Tokenizer("english"))
+
+            # Initialize LexRank summarizer
+            summarizer = LexRankSummarizer()
+
+            # Generate the summary
+            summary = summarizer(parser.document, sentence_count)
+
+            # Combine the summary sentences into a single string
+            summary_text = " ".join([str(sentence) for sentence in summary])
+
+            return summary_text
+        except Exception as e:
+            self.logger.error(f"Error generating summary for the text from URL {url}: {e}")
+            return None
+
     def generate_embedding_hf(self, text):
         """
         Generate an embedding for the given text using the HuggingFace BGE model.
@@ -60,14 +92,36 @@ class ContentExtractor:
         else:
             return None  # If embeddings are disabled, return None
 
-    def generate_embedding_co(self, text,type ="float"):
+    def generate_embedding_co(self, text,url, data_type=float, sleep_time=0.6, summary=False):
+        """
+        Generate an embedding for the given text with a sleep delay to avoid exceeding API limits.
+
+        Args:
+        - text (str): The text to be embedded.
+        - data_type (type): The data type for the embeddings (default: float).
+        - sleep_time (float): Time to sleep between API calls, in seconds (default: 0.6s to ensure < 100 calls per minute).
+
+        Returns:
+        - embedding: The generated embedding or None if an error occurs.
+        """
         if self.use_embeddings:
             try:
-                json = self.cohere_api_embed.embed(texts=[text], model="embed-english-light-v3.0", input_type="search_document", embedding_types=[type])
-                return json['embeddings'][type]
+                # Sleep to ensure we don't exceed API rate limits
+                time.sleep(sleep_time)
+
+                res = self.cohere_api_embed.embed(texts=[text], \
+                                                  model="embed-english-light-v3.0", \
+                                                  input_type="search_document", \
+                                                  embedding_types=["float"])
+                return res.embeddings.float
             except Exception as e:
-                self.logger.error(f"Error generating embeddings for {text}: {e}")
-                return None
+
+                if not summary:
+                    self.logger.error(f"Error generating embeddings for {url}: {e}")
+                else:
+                    self.logger.error(f"Error generating summary embeddings for {url}: {e}")
+
+                    return None
         else:
             return None  # If embeddings are disabled, return None
 
@@ -134,11 +188,12 @@ class ContentExtractor:
             start_extraction = time.time()
             content = trafilatura.extract(html_content)
             end_extraction = time.time()
-            print(f'Extracted time for {url}: {end_extraction - start_extraction}')
+            # print(f'Extracted time for {url}: {end_extraction - start_extraction}')
 
             # Conditionally generate the embedding if enabled
-            embedding = self.generate_embedding(content) if self.use_embeddings else None
-
+            content_embedding = self.generate_embedding_co(content, url) if self.use_embeddings else None
+            summary = self.generate_summary_text_lexrank(content, url)
+            summary_embedding = self.generate_embedding_co(summary, url, summary=True) if summary else None
             soup = BeautifulSoup(html_content, 'html.parser')
 
             category = soup.find("a", {"class": "category"})
@@ -158,7 +213,10 @@ class ContentExtractor:
                 "title": header_title_text,
                 "youtube_url": youtube_url,
                 "content": content,
-                "embedding": embedding  # Add embedding only if enabled
+                "content_embedding": content_embedding,  # Add embedding only if enabled,
+                "summary": summary,
+                "summary_embedding": summary_embedding
+
             }
 
             # For demonstration purposes, display the content
@@ -170,18 +228,3 @@ class ContentExtractor:
 
         except Exception as e:
             self.logger.error(f"Error extracting html for {url}: {e}")
-
-if __name__ == '__main__':
-    extractor = ContentExtractor(use_embeddings=False, main_save_path=None,save_content=False)
-    start = time.time()
-    url = "https://www.instructables.com/Tims-Mini-Plotter-2-With-Single-PCB/"
-    try:
-        response = requests.get(url)
-        response.raise_for_status()
-        html_content = response.text
-    except Exception as e:
-        print(f"Error extracting html for {url}: {e}")
-
-    extractor.extract_content_from_html(url, html_content)
-    end = time.time()
-    print(f"Total Time taken to extract content from {url}: {end - start}")

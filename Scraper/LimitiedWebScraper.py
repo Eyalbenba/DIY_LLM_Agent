@@ -30,6 +30,7 @@ class LimitedWebScraper:
         )
         self.extractor = ContentExtractor(save_content, main_save_path=main_save_path, logger=self.logger)
 
+
     def run(self):
         """
         Run the web scraper: Crawl the website and process content immediately.

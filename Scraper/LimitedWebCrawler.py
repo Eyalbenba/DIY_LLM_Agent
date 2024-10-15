@@ -1,6 +1,8 @@
 from WebCrawler import WebCrawler
 import requests
+import pickle
 from bs4 import BeautifulSoup
+from datetime import datetime
 class LimitedWebCrawler(WebCrawler):
     def __init__(self, homepage, max_seen_urls_per_topic=500, blacklist=None, logger=None):
         """
@@ -103,7 +105,20 @@ class LimitedWebCrawler(WebCrawler):
         self.logger.info(f"Links Left to Visit: {len(self.to_visit)}")
         for topic, count in self.topic_counts.items():
             self.logger.info(f"Topic: {topic}, Pages scraped: {count}")
+        current_time = datetime.now().strftime('%Y_%m_%d_%H')
+        visited_link_pkl_file_name = f'visited_and_extracted_links_{current_time}.pkl'
+        self.save_to_pkl(self.visited_links, visited_link_pkl_file_name)
+    def save_to_pkl(self,data, filename):
+        """
+        Save the provided data to a pickle (.pkl) file.
 
+        Args:
+        - data: The data to be saved.
+        - filename: The name of the file where the data will be saved.
+        """
+        with open(filename, 'wb') as f:
+            pickle.dump(data, f)
+        print(f"Data successfully saved to {filename}")
     def determine_topic(self, soup):
         """
         Determine the topic from the parsed HTML content.

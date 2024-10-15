@@ -175,14 +175,20 @@ if __name__ == "__main__":
     client = get_mongo_client(uri)
     print("Connected to MongoDB.")
 
-    # Define the directory containing JSON files
-    directory_path = '/Users/eyalbenbarouch/Documents/My Stuff/Handyman_LLM_Agent/Instructables_Scraped_Data'
 
-    # Define the log directory
-    log_directory = '/Users/eyalbenbarouch/Documents/My Stuff/Handyman_LLM_Agent/run_logs/data_logs'
-
-    # Call the function to insert all JSON data (pass save_to_mongo=False to test without saving)
-    insert_all_json_data(client, directory_path, log_directory, save_to_mongo=False)
+    try:
+        client.admin.command('ping')
+        print("Pinged your deployment. You successfully connected to MongoDB!")
+    except Exception as e:
+        print(e)
+    # # Define the directory containing JSON files
+    # directory_path = '/Users/eyalbenbarouch/Documents/My Stuff/Handyman_LLM_Agent/Instructables_Scraped_Data'
+    #
+    # # Define the log directory
+    # log_directory = '/Users/eyalbenbarouch/Documents/My Stuff/Handyman_LLM_Agent/run_logs/data_logs'
+    #
+    # # Call the function to insert all JSON data (pass save_to_mongo=False to test without saving)
+    # insert_all_json_data(client, directory_path, log_directory, save_to_mongo=False)
 
     # Close the MongoDB connection
     print("Closing MongoDB connection...")

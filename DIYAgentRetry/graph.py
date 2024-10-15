@@ -21,6 +21,7 @@ def build_graph():
     builder.add_edge("search_web", "generate_diy_plan")
     builder.add_conditional_edges("generate_diy_plan",max_plans_reached, ["human_feedback_on_diyplan",END])
     builder.add_conditional_edges("human_feedback_on_diyplan",should_make_new_diy_plan, ["summarize_conversation",END])
+    builder.add_edge("summarize_conversation", "refine_user_query")
     ## Need to add how to continue after summarize of the conversation
 
 

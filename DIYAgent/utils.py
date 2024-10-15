@@ -111,5 +111,5 @@ def load_chat_model(fully_specified_name: str) -> BaseChatModel:
     return init_chat_model(model, model_provider=provider)
 
 def get_initial_user_query():
-    user_query =HumanMessage(content=input("What is your DIY Plan"))
+    user_query =HumanMessage(content=input("What is your DIY Plan?\n"))
     return get_message_text(user_query)

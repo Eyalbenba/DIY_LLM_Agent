@@ -9,13 +9,17 @@ import getpass
 from dotenv import load_dotenv
 import os
 from dotenv import load_dotenv
-
+from langchain_core.messages import HumanMessage
 
 def main():
     # Load environment variables from .env file
     load_dotenv()
     os.environ['OPENAI_API_KEY'] = os.getenv('OPENAI_API_KEY')
     os.environ['TAVILY_API_KEY'] = os.getenv('TAVILY_API_KEY')
+    os.environ['CO_API_KEY'] = os.getenv('CO_API_KEY')
+    co_api = os.getenv('CO_API_KEY')
+
+
 
     # Build the graph
     builder = build_graph()
@@ -37,11 +41,11 @@ def main():
         summary=''
     )
 
-    thread = {"configurable": {"thread_id": "13"}}
+    thread = {"configurable": {"thread_id": "14"}}
 
     # Run the graph to generate the DIY plan
     for event in graph.stream(diystate,config=thread,stream_mode="values"):
-        print(event)
+        pass
 
     # graph_run = graph.invoke(diystate, thread)
     current_state = graph.get_state(thread)
@@ -54,10 +58,19 @@ def main():
     feedback = input("Is this plan to your liking? (yes/no): ").strip().lower()
     if feedback == 'no':
         refine_feedback = input("Please Add Refinements").strip().lower()
-        graph.update_state(thread,{"human_refine_plan_string":refine_feedback})
-        new_state = graph.get_state(thread).values
+        # Update Messages
+        current_state = graph.get_state(thread)
+        messages = current_state.values['messages']
+        messages.append(HumanMessage(f"User's Refinment for the First DIY Plan : {refine_feedback}", name="User"))
+        # Update State
+        graph.update_state(thread,{"human_refine_plan_string":refine_feedback,'messages':messages})
         for event in graph.stream(None,thread,stream_mode="values"):
-            print(event)
+            pass
+        current_state = graph.get_state(thread)
+        diy_plan = current_state.values['DIY_Final_Plan']
+        # Output the initial DIY plan
+        print("DIY Final Plan:")
+        print(diy_plan)
 
     #
     # # If the user doesn't like the plan, refine it
