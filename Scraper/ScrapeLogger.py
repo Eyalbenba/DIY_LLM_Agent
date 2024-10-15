@@ -13,7 +13,7 @@ class ScraperLogger:
         """
         self.logger = logging.getLogger(__name__)
         self.logger.setLevel(level)
-
+        self.log_dir=log_dir
         # Check if handlers already exist
         if not self.logger.handlers:
             # Define the log format

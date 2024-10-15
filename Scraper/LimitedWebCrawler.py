@@ -3,6 +3,7 @@ import requests
 import pickle
 from bs4 import BeautifulSoup
 from datetime import datetime
+import os
 class LimitedWebCrawler(WebCrawler):
     def __init__(self, homepage, max_seen_urls_per_topic=500, blacklist=None, logger=None):
         """
@@ -22,7 +23,8 @@ class LimitedWebCrawler(WebCrawler):
             "Craft": 0,
             "Cooking": 0,
             "Living": 0,
-            "Teachers": 0
+            "Teachers": 0,
+            "Outside":0
         }
         self.max_seen_urls_per_topic = max_seen_urls_per_topic
 
@@ -107,7 +109,8 @@ class LimitedWebCrawler(WebCrawler):
             self.logger.info(f"Topic: {topic}, Pages scraped: {count}")
         current_time = datetime.now().strftime('%Y_%m_%d_%H')
         visited_link_pkl_file_name = f'visited_and_extracted_links_{current_time}.pkl'
-        self.save_to_pkl(self.visited_links, visited_link_pkl_file_name)
+        pkl_save_path = os.path.join("/Users/eyalbenbarouch/Documents/My Stuff/Handyman_LLM_Agent/visitied_links",visited_link_pkl_file_name)
+        self.save_to_pkl(self.visited_links, pkl_save_path)
     def save_to_pkl(self,data, filename):
         """
         Save the provided data to a pickle (.pkl) file.
@@ -116,9 +119,15 @@ class LimitedWebCrawler(WebCrawler):
         - data: The data to be saved.
         - filename: The name of the file where the data will be saved.
         """
+        directory = os.path.dirname(filename)
+
+        # Create the directory if it doesn't exist
+        if not os.path.exists(directory):
+            os.makedirs(directory)
+
         with open(filename, 'wb') as f:
             pickle.dump(data, f)
-        print(f"Data successfully saved to {filename}")
+        self.logger.info(f"Visited Links pkl successfully saved to {filename}")
     def determine_topic(self, soup):
         """
         Determine the topic from the parsed HTML content.
