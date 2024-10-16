@@ -18,12 +18,12 @@ class LimitedWebCrawler(WebCrawler):
 
         # Topic-based tracking
         self.topic_counts = {
-            "Circuits": 0,
-            "Workshop": 0,
+            # "Circuits": 0,
+            # "Workshop": 0,
             "Craft": 0,
             "Cooking": 0,
             "Living": 0,
-            "Teachers": 0,
+            # "Teachers": 0,
             "Outside":0
         }
         self.max_seen_urls_per_topic = max_seen_urls_per_topic

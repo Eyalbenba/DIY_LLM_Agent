@@ -78,21 +78,21 @@ def generate_diy_plan(state: DIYAgentState) -> Dict[str, str]:
     # Update the state with the final plan
     return {"DIY_Final_Plan": generated.plan,"messages":state['messages']}
 
-# def hybrid_search(state: DIYAgentState) -> Dict[str, str]:
-#     print("=== STAGE: Hybrid Search ===")
-#     search_query = state['diy_query']
-#     uri = os.environ['MongoURI']
-#     db = MongoClient(f"mongodb+srv://{uri}")["all_scraped_data"]
-#
-#     hybrid_rag = TavilyHybridClient(
-#         api_key=os.environ['TAVILY_API_KEY'],
-#         db_provider="mongodb",
-#         collection=db.get_collection("all_data"),
-#         index="vector_index",
-#         embeddings_field="embedding",
-#         content_field="content"
-#     )
-#     results = hybrid_rag.search(search_query, max_local=5, max_foreign=2,save_foreign=True)
+def hybrid_search(state: DIYAgentState) -> Dict[str, str]:
+    print("=== STAGE: Hybrid Search ===")
+    search_query = state['diy_query']
+    uri = os.environ['MongoURI']
+    db = MongoClient(f"mongodb+srv://{uri}")["all_scraped_data"]
+
+    hybrid_rag = TavilyHybridClient(
+        api_key=os.environ['TAVILY_API_KEY'],
+        db_provider="mongodb",
+        collection=db.get_collection("all_data"),
+        index="vector_index",
+        embeddings_field="embedding",
+        content_field="content"
+    )
+    results = hybrid_rag.search(search_query, max_local=5, max_foreign=2,save_foreign=True)
 def search_web(state: DIYAgentState) -> Dict[str, list]:
     """Retrieve documents from a web search based on the refined query."""
     print("=== STAGE: Web Search ===")

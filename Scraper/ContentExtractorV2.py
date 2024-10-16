@@ -21,7 +21,7 @@ nltk.download('punkt')
 load_dotenv()
 
 # Initialize the Cohere client
-co = cohere.ClientV2(os.getenv('CO_API_PROD_KEY'))
+co = cohere.ClientV2(os.getenv('CO_API_KEY'))
 
 class ContentExtractor:
     def __init__(self, mongo_client,save_content=True, main_save_path=None, logger=None, use_embeddings=True):
